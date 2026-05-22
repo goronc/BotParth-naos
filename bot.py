@@ -3,6 +3,7 @@ from discord.ext import commands, tasks
 from mcstatus import JavaServer
 import asyncio
 from datetime import datetime
+from aiohttp import web
 
 # ═══════════════════════════════════════════════════════
 # CONFIGURATION — Remplace les valeurs ici
@@ -180,6 +181,25 @@ async def on_ready():
     update_status.start()
 
 # ═══════════════════════════════════════════════════════
+# SERVEUR WEB (requis pour Render free tier)
+# ═══════════════════════════════════════════════════════
+async def health_check(_request):
+    return web.Response(text="OK")
+
+async def start_web_server():
+    app = web.Application()
+    app.router.add_get("/", health_check)
+    runner = web.AppRunner(app)
+    await runner.setup()
+    port = int(os.environ.get("PORT", 8080))
+    site = web.TCPSite(runner, "0.0.0.0", port)
+    await site.start()
+
+# ═══════════════════════════════════════════════════════
 # LANCEMENT
 # ═══════════════════════════════════════════════════════
-bot.run(TOKEN)
+async def main():
+    await start_web_server()
+    await bot.start(TOKEN)
+
+asyncio.run(main())
