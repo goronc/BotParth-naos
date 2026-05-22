@@ -7,7 +7,11 @@ from datetime import datetime
 # ═══════════════════════════════════════════════════════
 # CONFIGURATION — Remplace les valeurs ici
 # ═══════════════════════════════════════════════════════
-TOKEN = "MTUwNzE3MDEyOTUxODEzMzMxOA.GGBqoy.WdK6tjOjoz1wcpgusGsBTa4Zwt4fN7XswH95NY"
+import os
+from dotenv import load_dotenv
+
+load_dotenv()
+TOKEN = os.getenv("DISCORD_TOKEN")
 CHANNEL_ID = 1507177617277849620
 SERVER_IP = "23.109.46.233"
 SERVER_PORT = 25579
@@ -113,7 +117,7 @@ async def update_status():
     if channel is None:
         return
 
-    status = get_server_status()
+    status = await asyncio.to_thread(get_server_status)
     embed = create_status_embed(status)
 
     # Mettre à jour le message de statut existant
@@ -147,7 +151,7 @@ async def update_status():
 # ═══════════════════════════════════════════════════════
 @bot.command(name="status")
 async def status_command(ctx):
-    status = get_server_status()
+    status = await asyncio.to_thread(get_server_status)
     embed = create_status_embed(status)
     await ctx.send(embed=embed)
 
@@ -156,7 +160,7 @@ async def status_command(ctx):
 # ═══════════════════════════════════════════════════════
 @bot.command(name="joueurs")
 async def joueurs_command(ctx):
-    status = get_server_status()
+    status = await asyncio.to_thread(get_server_status)
     if status["online"]:
         if status["player_list"]:
             joueurs = "\n".join([f"• {p}" for p in status["player_list"]])
