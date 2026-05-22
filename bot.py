@@ -13,6 +13,7 @@ from dotenv import load_dotenv
 
 load_dotenv()
 TOKEN = os.getenv("DISCORD_TOKEN")
+print(f"🔑 TOKEN chargé : {'OUI' if TOKEN else 'NON — variable manquante !'}")
 CHANNEL_ID = 1507177617277849620
 SERVER_IP = "23.109.46.233"
 SERVER_PORT = 25579
