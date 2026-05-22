@@ -110,10 +110,9 @@ def create_status_embed(status):
     return embed
 
 # ═══════════════════════════════════════════════════════
-# TÂCHE : Mise à jour automatique toutes les 60 secondes
+# FONCTION : Mettre à jour le message de statut
 # ═══════════════════════════════════════════════════════
-@tasks.loop(seconds=60)
-async def update_status():
+async def do_update():
     global status_message
     channel = bot.get_channel(CHANNEL_ID)
     if channel is None:
@@ -122,23 +121,19 @@ async def update_status():
     status = await asyncio.to_thread(get_server_status)
     embed = create_status_embed(status)
 
-    # Mettre à jour le message de statut existant
     if status_message:
         try:
             await status_message.edit(embed=embed)
         except discord.NotFound:
             status_message = await channel.send(embed=embed)
     else:
-        # Chercher un message existant du bot dans le channel
         async for message in channel.history(limit=10):
             if message.author == bot.user:
                 status_message = message
                 await status_message.edit(embed=embed)
                 return
-        # Sinon envoyer un nouveau message
         status_message = await channel.send(embed=embed)
 
-    # Mettre à jour le statut du bot
     if status["online"]:
         await bot.change_presence(
             activity=discord.Game(f"🟢 {status['players']}/{status['max']} joueurs en ligne")
@@ -149,13 +144,19 @@ async def update_status():
         )
 
 # ═══════════════════════════════════════════════════════
+# TÂCHE : Mise à jour automatique toutes les 60 secondes
+# ═══════════════════════════════════════════════════════
+@tasks.loop(seconds=60)
+async def update_status():
+    await do_update()
+
+# ═══════════════════════════════════════════════════════
 # COMMANDE : !status
 # ═══════════════════════════════════════════════════════
 @bot.command(name="status")
 async def status_command(ctx):
-    status = await asyncio.to_thread(get_server_status)
-    embed = create_status_embed(status)
-    await ctx.send(embed=embed)
+    await ctx.message.delete()
+    await do_update()
 
 # ═══════════════════════════════════════════════════════
 # COMMANDE : !joueurs
